@@ -160,7 +160,10 @@ main (int argc, char *argv[])
                                  "GridWidth", UintegerValue (3),
                                 //  "GridWidth", UintegerValue (nodeNum),  // will create linear topology
                                  "LayoutType", StringValue ("RowFirst"));
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobility.SetMobilityModel ("ns3::RandomDirection2dMobilityModel",
+                             "Bounds", RectangleValue (Rectangle (-500, 500, -500, 500)),
+                             "Speed", StringValue ("ns3::ConstantRandomVariable[Constant=2]"),
+                             "Pause", StringValue ("ns3::ConstantRandomVariable[Constant=0.2]"));
   mobility.Install (nodes);
 
   // IP stack and routing
