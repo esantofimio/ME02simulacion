@@ -6,7 +6,7 @@ import gym
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from tensorflow import keras
 from ns3gym import ns3env
 
@@ -30,7 +30,7 @@ class DqnAgent(object):
 
     def fit(self, state, target, action):
         target_f = self.model.predict(state)
-        target_f[0][action] = target
+        target_f[0][action] = target 
         self.model.fit(state, target_f, epochs=1, verbose=0)
 
 
@@ -54,16 +54,15 @@ ob_space = env.observation_space
 ac_space = env.action_space
 print("Observation space: ", ob_space,  ob_space.dtype)
 print("Action space: ", ac_space, ac_space.dtype)
-s_size = ob_space.shape[0]
+s_size = ob_space[0].shape[0]
 a_size = ac_space.shape[0]
 
 inputQueues = 1
 cwSize = 100
 
-agent0 = DqnAgent(inputQueues, cwSize)
-agent1 = DqnAgent(inputQueues, cwSize)
-agent2 = DqnAgent(inputQueues, cwSize)
-agent3 = DqnAgent(inputQueues, cwSize)
+agents = []
+for i in range (a_size - 1):
+    agents.append(DqnAgent(inputQueues, cwSize))
 
 total_episodes = 10
 max_env_steps = 100
@@ -77,51 +76,47 @@ time_history = []
 rew_history = []
 
 for e in range(total_episodes):
-
-    state = env.reset()
+    state = env.reset()[0]
+    print(state)
     state = np.reshape(state, [1, s_size])
     rewardsum = 0
     for time in range(max_env_steps):
-
         # Choose action
+        actions = []
         if np.random.rand(1) < epsilon:
-            action0 = np.random.randint(cwSize)
-            action1 = np.random.randint(cwSize)
-            action2 = np.random.randint(cwSize)
-            action3 = np.random.randint(cwSize)
+            for agent in agents:
+                actions.append(np.random.randint(cwSize))
         else:
-            action0 = agent0.get_action(state[:,0]-state[:,1])
-            action1 = agent1.get_action(state[:,1]-state[:,2])
-            action2 = agent2.get_action(state[:,2]-state[:,3])
-            action3 = agent3.get_action(state[:,3]-state[:,4])
+            for agent in agents:
+                actions.append(agent.get_action(state[:,0]-state[:,1]))
 
         # Step
-        actionVec = [action0, action1, action2, action3, action0, action1, action2, action3, action0, action1, action2, action3]
-        next_state, reward, done, _ = env.step(actionVec)
-
+        actions.append(100)
+        next_state, reward, done, _ = env.step(actions)
+        print("Next State, done:  ", next_state, done)
+        next_state = next_state[0]
         if done:
             print("episode: {}/{}, time: {}, rew: {}, eps: {:.2}"
                   .format(e, total_episodes, time, rewardsum, epsilon))
             break
 
+        print("pre resize: ", next_state)
         next_state = np.reshape(next_state, [1, s_size])
+        print("post resize: ", next_state)
+
+        
+        targets = []
 
         # Train
-        target0 = reward
-        target1 = reward
-        target2 = reward
-        target3 = reward
+        for agent in agents:
+            targets.append(reward)
 
         if not done:
-            target0 = reward + 0.95 * np.amax(agent0.predict(next_state[:,0]-next_state[:,1]))
-            target1 = reward + 0.95 * np.amax(agent1.predict(next_state[:,1]-next_state[:,2]))
-            target2 = reward + 0.95 * np.amax(agent2.predict(next_state[:,2]-next_state[:,3]))
-            target3 = reward + 0.95 * np.amax(agent3.predict(next_state[:,3]-next_state[:,4]))
+            for i in range(len(agents)):
+                targets[i] = reward + 0.95 * np.amax(agents[i].predict(next_state[:,0]-next_state[:,1]))
 
-        agent0.fit(state[:,0]-state[:,1], target0, action0)
-        agent1.fit(state[:,1]-state[:,2], target1, action1)
-        agent2.fit(state[:,2]-state[:,3], target2, action2)
-        agent3.fit(state[:,3]-state[:,4], target3, action3)
+        for i in range(len(agents)):
+            agents[i].fit(state[:,i]-state[:, i + 1], targets[i], actions[i])
 
         state = next_state
         rewardsum += reward

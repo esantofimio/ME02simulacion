@@ -18,13 +18,12 @@
  * Author: Piotr Gawlowicz <gawlowicz@tkn.tu-berlin.de>
  */
 
-
+#include "mygym.h"
 #include "ns3/object.h"
 #include "ns3/core-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/node-list.h"
 #include "ns3/log.h"
-#include "mygym.h"
 #include <sstream>
 #include <iostream>
 
@@ -140,13 +139,13 @@ MyGymEnv::GetQueue(Ptr<Node> node)
 Ptr<OpenGymDataContainer>
 MyGymEnv::GetObservation()
 {
-
-  static uint32_t lastLosses = 0;
+  
   NS_LOG_FUNCTION (this);
   uint32_t nodeNum = NodeList::GetNNodes ();
   std::vector<uint32_t> shape = {nodeNum,};
 
   // SetUp Losses
+  static uint32_t lastLosses = 0;
   Ptr<OpenGymDiscreteContainer> discrete = CreateObject<OpenGymDiscreteContainer>(nodeNum);
   uint32_t losses = udpServer->GetLost ();
   discrete->SetValue(losses - lastLosses);
@@ -172,10 +171,10 @@ MyGymEnv::GetObservation()
 float
 MyGymEnv::GetReward()
 {
-  NS_LOG_FUNCTION (this); 
-  static float lastValueRx = 0.0;
-  float reward = m_rxPktNum - lastValueRx;
-  lastValueRx = m_rxPktNum;
+  NS_LOG_FUNCTION (this);
+  static float lastValue = 0.0;
+  float reward = m_rxPktNum - lastValue;
+  lastValue = m_rxPktNum;
   NS_LOG_UNCOND ("MyGetReward: " << reward);
   return reward;
 }
@@ -255,7 +254,6 @@ MyGymEnv::CountRxPkts(Ptr<MyGymEnv> entity, Ptr<Node> node, Ptr<const Packet> pa
   entity->m_currentNode = node;
   entity->m_rxPktNum++;
 }
-
 
 void 
 MyGymEnv::setUdpServer(Ptr<UdpServer> theUdpServer){
