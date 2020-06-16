@@ -6,7 +6,6 @@ import gym
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import numpy as np
-#import matplotlib.pyplot as plt
 from tensorflow import keras
 from ns3gym import ns3env
 
@@ -52,7 +51,7 @@ env = ns3env.Ns3Env(port=port, stepTime=stepTime, startSim=startSim, simSeed=see
 
 ob_space = env.observation_space
 ac_space = env.action_space
-print("Observation space: ", ob_space,  ob_space.dtype)
+print("Observation space: ", ob_space)
 print("Action space: ", ac_space, ac_space.dtype)
 s_size = ob_space[0].shape[0]
 a_size = ac_space.shape[0]
@@ -75,12 +74,15 @@ epsilon_decay = 0.999
 time_history = []
 rew_history = []
 
+stepIdx = 0
+
 for e in range(total_episodes):
     state = env.reset()[0]
-    print(state)
     state = np.reshape(state, [1, s_size])
     rewardsum = 0
     for time in range(max_env_steps):
+        stepIdx += 1
+        
         # Choose action
         actions = []
         if np.random.rand(1) < epsilon:
@@ -90,20 +92,20 @@ for e in range(total_episodes):
             for agent in agents:
                 actions.append(agent.get_action(state[:,0]-state[:,1]))
 
-        # Step
         actions.append(100)
-        next_state, reward, done, _ = env.step(actions)
-        print("Next State, done:  ", next_state, done)
+        print("---action: ", actions)
+        # Step
+        next_state, reward, done, info = env.step(actions)
+
+        print("Step: ", stepIdx)
+        print("---next state, reward, done, info: ", next_state, reward, done, info)
         next_state = next_state[0]
         if done:
             print("episode: {}/{}, time: {}, rew: {}, eps: {:.2}"
                   .format(e, total_episodes, time, rewardsum, epsilon))
             break
 
-        print("pre resize: ", next_state)
         next_state = np.reshape(next_state, [1, s_size])
-        print("post resize: ", next_state)
-
         
         targets = []
 
@@ -124,36 +126,3 @@ for e in range(total_episodes):
         
     time_history.append(time)
     rew_history.append(rewardsum)
-
-#for n in range(2 ** s_size):
-#    state = [n >> i & 1 for i in range(0, 2)]
-#    state = np.reshape(state, [1, s_size])
-#    print("state " + str(state) 
-#        + " -> prediction " + str(model.predict(state)[0])
-#        )
-
-#print(model.get_config())
-#print(model.to_json())
-#print(model.get_weights())
-
-# plt.plot(range(len(time_history)), time_history)
-# plt.plot(range(len(rew_history)), rew_history)
-# plt.xlabel('Episode')
-# plt.ylabel('Time')
-# plt.show()
-
-
-curve0 = np.zeros(shape=(101))
-curve1 = np.zeros(shape=(101))
-curve2 = np.zeros(shape=(101))
-curve3 = np.zeros(shape=(101))
-
-for i in range(101):
-    state = np.array([i])
-    state = np.reshape(state, [1, 1])
-
-    curve0[i] = agent0.get_action(state)
-    curve1[i] = agent1.get_action(state)
-    curve2[i] = agent2.get_action(state)
-    curve3[i] = agent3.get_action(state)
-        
