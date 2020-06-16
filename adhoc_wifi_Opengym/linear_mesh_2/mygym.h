@@ -24,6 +24,7 @@
 
 #include "ns3/stats-module.h"
 #include "ns3/opengym-module.h"
+#include "ns3/udp-server.h"
 
 namespace ns3 {
 
@@ -47,6 +48,7 @@ public:
   float GetReward();
   std::string GetExtraInfo();
   bool ExecuteActions(Ptr<OpenGymDataContainer> action);
+  void setUdpServer(Ptr<UdpServer> udpServer);
 
   // the function has to be static to work with MakeBoundCallback
   // that is why we pass pointer to MyGymEnv instance to be able to store the context (node, etc)
@@ -61,6 +63,7 @@ private:
   Time m_interval = Seconds(0.1);
   Ptr<Node> m_currentNode;
   uint64_t m_rxPktNum;
+  Ptr<UdpServer> udpServer;
 
 };
 

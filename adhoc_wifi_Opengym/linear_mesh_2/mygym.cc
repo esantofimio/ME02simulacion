@@ -18,12 +18,13 @@
  * Author: Piotr Gawlowicz <gawlowicz@tkn.tu-berlin.de>
  */
 
-#include "mygym.h"
+
 #include "ns3/object.h"
 #include "ns3/core-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/node-list.h"
 #include "ns3/log.h"
+#include "mygym.h"
 #include <sstream>
 #include <iostream>
 
@@ -103,7 +104,12 @@ MyGymEnv::GetObservationSpace()
   float high = 100.0;
   std::vector<uint32_t> shape = {nodeNum,};
   std::string dtype = TypeNameGet<uint32_t> ();
-  Ptr<OpenGymBoxSpace> space = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
+  Ptr<OpenGymDiscreteSpace> discrete = CreateObject<OpenGymDiscreteSpace> (nodeNum);
+  Ptr<OpenGymBoxSpace> box = CreateObject<OpenGymBoxSpace> (low, high, shape, dtype);
+
+  Ptr<OpenGymTupleSpace> space = CreateObject<OpenGymTupleSpace> ();
+  space->Add(box);
+  space->Add(discrete);
   NS_LOG_UNCOND ("GetObservationSpace: " << space);
   return space;
 }
@@ -134,9 +140,18 @@ MyGymEnv::GetQueue(Ptr<Node> node)
 Ptr<OpenGymDataContainer>
 MyGymEnv::GetObservation()
 {
+
+  static uint32_t lastLosses = 0;
   NS_LOG_FUNCTION (this);
   uint32_t nodeNum = NodeList::GetNNodes ();
   std::vector<uint32_t> shape = {nodeNum,};
+
+  // SetUp Losses
+  Ptr<OpenGymDiscreteContainer> discrete = CreateObject<OpenGymDiscreteContainer>(nodeNum);
+  uint32_t losses = udpServer->GetLost ();
+  discrete->SetValue(losses - lastLosses);
+  lastLosses = losses;
+  // SetUp Box
   Ptr<OpenGymBoxContainer<uint32_t> > box = CreateObject<OpenGymBoxContainer<uint32_t> >(shape);
 
   for (NodeList::Iterator i = NodeList::Begin (); i != NodeList::End (); ++i) {
@@ -146,17 +161,21 @@ MyGymEnv::GetObservation()
     box->AddValue(value);
   }
 
-  NS_LOG_UNCOND ("MyGetObservation: " << box);
-  return box;
+  Ptr<OpenGymTupleContainer> data = CreateObject<OpenGymTupleContainer> ();
+  data->Add(box);
+  data->Add(discrete);
+
+  NS_LOG_UNCOND ("MyGetObservation: " << data);
+  return data;
 }
 
 float
 MyGymEnv::GetReward()
 {
-  NS_LOG_FUNCTION (this);
-  static float lastValue = 0.0;
-  float reward = m_rxPktNum - lastValue;
-  lastValue = m_rxPktNum;
+  NS_LOG_FUNCTION (this); 
+  static float lastValueRx = 0.0;
+  float reward = m_rxPktNum - lastValueRx;
+  lastValueRx = m_rxPktNum;
   NS_LOG_UNCOND ("MyGetReward: " << reward);
   return reward;
 }
@@ -235,6 +254,12 @@ MyGymEnv::CountRxPkts(Ptr<MyGymEnv> entity, Ptr<Node> node, Ptr<const Packet> pa
   NS_LOG_DEBUG ("Client received a packet of " << packet->GetSize () << " bytes");
   entity->m_currentNode = node;
   entity->m_rxPktNum++;
+}
+
+
+void 
+MyGymEnv::setUdpServer(Ptr<UdpServer> theUdpServer){
+  udpServer = theUdpServer;
 }
 
 

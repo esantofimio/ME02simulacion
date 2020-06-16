@@ -47,7 +47,7 @@ main (int argc, char *argv[])
   uint32_t openGymPort = 5555;
   uint32_t testArg = 0;
 
-  bool eventBasedEnv = true;
+  bool eventBasedEnv = false;
 
   //Parameters of the scenario
   uint32_t nodeNum = 12;
@@ -251,6 +251,7 @@ main (int argc, char *argv[])
   } else {
     udpServer->TraceConnectWithoutContext ("Rx", MakeBoundCallback (&MyGymEnv::CountRxPkts, myGymEnv, dstNode));
   }
+  myGymEnv->setUdpServer(udpServer);
 
   NS_LOG_UNCOND ("Simulation start");
   Simulator::Stop (Seconds (simulationTime));
