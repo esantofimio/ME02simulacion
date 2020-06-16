@@ -50,7 +50,7 @@ main (int argc, char *argv[])
   bool eventBasedEnv = true;
 
   //Parameters of the scenario
-  uint32_t nodeNum = 12;
+  uint32_t nodeNum = 20;
   double distance = 10.0;
   bool noErrors = false;
   std::string errorModelType = "ns3::NistErrorRateModel";
@@ -159,10 +159,7 @@ main (int argc, char *argv[])
                                  "DeltaY", DoubleValue (distance),
                                  "GridWidth", UintegerValue (nodeNum),  // will create linear topology
                                  "LayoutType", StringValue ("RowFirst"));
-  mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",
-                             "Bounds", RectangleValue (Rectangle (-500, 500, -500, 500)),
-                             "Speed", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=5.0] "),
-                             "Direction", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=20.0]"));
+  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (nodes);
 
   // IP stack and routing
