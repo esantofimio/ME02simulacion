@@ -6,11 +6,11 @@
 <li>German David Guerrero</li>
 </ul>
 
-<h1>
-  Codigo fuente del model red ad-hoc
-</h1>
- ####Code Blocks (Indented style)
-
+<h3>
+  Codigo fuente del agente
+</h3>
+    fichero: ./adhoc_wifi_Opengym/linear_mesh_2/dqn-agent-v2.py 
+    
     import scipy.io as io
     import gym
     import tensorflow as tf
@@ -133,3 +133,9 @@
 
         time_history.append(time)
         rew_history.append(rewardsum)
+
+<h3>
+  Descripción del codigo:
+</h3>
+
+
