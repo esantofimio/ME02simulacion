@@ -76,53 +76,49 @@ rew_history = []
 
 stepIdx = 0
 
-for e in range(total_episodes):
-    state = env.reset()[0]
-    state = np.reshape(state, [1, s_size])
-    rewardsum = 0
-    for time in range(max_env_steps):
-        stepIdx += 1
-        
-        # Choose action
-        actions = []
-        if np.random.rand(1) < epsilon:
-            for agent in agents:
-                actions.append(np.random.randint(cwSize))
-        else:
-            for agent in agents:
-                actions.append(agent.get_action(state[:,0]-state[:,1]))
-
-        actions.append(100)
-        print("---action: ", actions)
-        # Step
-        next_state, reward, done, info = env.step(actions)
-
-        print("Step: ", stepIdx)
-        print("---next state, reward, done, info: ", next_state, reward, done, info)
-        next_state = next_state[0]
-        if done:
-            print("episode: {}/{}, time: {}, rew: {}, eps: {:.2}"
-                  .format(e, total_episodes, time, rewardsum, epsilon))
-            break
-
-        next_state = np.reshape(next_state, [1, s_size])
-        
-        targets = []
-
-        # Train
+state = env.reset()[0]
+state = np.reshape(state, [1, s_size])
+rewardsum = 0
+for time in range(max_env_steps):
+    stepIdx += 1
+    
+    # Choose action
+    actions = []
+    if np.random.rand(1) < epsilon:
         for agent in agents:
-            targets.append(reward)
+            actions.append(np.random.randint(cwSize))
+    else:
+        for agent in agents:
+            actions.append(agent.get_action(state[:,0]-state[:,1]))
 
-        if not done:
-            for i in range(len(agents)):
-                targets[i] = reward + 0.95 * np.amax(agents[i].predict(next_state[:,0]-next_state[:,1]))
+    actions.append(100)
+    print("---action: ", actions)
+    # Step
+    next_state, reward, done, info = env.step(actions)
 
+    print("Step: ", stepIdx)
+    print("---next state, reward, done, info: ", next_state, reward, done, info)
+    next_state = next_state[0]
+    if done:
+        print("Done")
+        break
+
+    next_state = np.reshape(next_state, [1, s_size])
+    
+    targets = []
+
+    # Train
+    for agent in agents:
+        targets.append(reward)
+
+    if not done:
         for i in range(len(agents)):
-            agents[i].fit(state[:,i]-state[:, i + 1], targets[i], actions[i])
+            targets[i] = reward + 0.95 * np.amax(agents[i].predict(next_state[:,0]-next_state[:,1]))
 
-        state = next_state
-        rewardsum += reward
-        if epsilon > epsilon_min: epsilon *= epsilon_decay
-        
-    time_history.append(time)
-    rew_history.append(rewardsum)
+    for i in range(len(agents)):
+        agents[i].fit(state[:,i]-state[:, i + 1], targets[i], actions[i])
+
+    state = next_state
+    rewardsum += reward
+    if epsilon > epsilon_min: epsilon *= epsilon_decay
+
