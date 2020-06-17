@@ -80,6 +80,14 @@ MyGymEnv::DoDispose ()
   NS_LOG_FUNCTION (this);
 }
 
+
+/**
+ * Función para obtener el ambiente de acción. Para ese modelo, las acciones representan 
+ * un valor fijo para congestion window (cw) de cada nodo. El espacio entonces sera la 
+ * nueva cw de cada nodo. Por ende sera un Box de tamaño nodenum entre 0 (el mínimo valor
+ * de la cw) y 100 (el máximo valor de la cw)
+ * 
+ */ 
 Ptr<OpenGymSpace>
 MyGymEnv::GetActionSpace()
 {
@@ -94,6 +102,14 @@ MyGymEnv::GetActionSpace()
   return space;
 }
 
+
+/**
+ * 
+ * El espacio de observación esta definido por una pareja que contiene el número de paquetes
+ * encolados de cada nodo, y el total de paquetes perdidos tras la última acción. Por ende
+ * este espacio será una tupla que contiene una box, y un elemento discreto.
+ * 
+ */ 
 Ptr<OpenGymSpace>
 MyGymEnv::GetObservationSpace()
 {
@@ -144,13 +160,13 @@ MyGymEnv::GetObservation()
   uint32_t nodeNum = NodeList::GetNNodes ();
   std::vector<uint32_t> shape = {nodeNum,};
 
-  // SetUp Losses
+  // Instanciación del contenedor de los paquetes perdidos tras la última acción
   static uint32_t lastLosses = 0;
   Ptr<OpenGymDiscreteContainer> discrete = CreateObject<OpenGymDiscreteContainer>(nodeNum);
   uint32_t losses = udpServer->GetLost ();
   discrete->SetValue(losses - lastLosses);
   lastLosses = losses;
-  // SetUp Box
+  // Busqueda de todos los paquetes encolados de cada nodo.
   Ptr<OpenGymBoxContainer<uint32_t> > box = CreateObject<OpenGymBoxContainer<uint32_t> >(shape);
 
   for (NodeList::Iterator i = NodeList::Begin (); i != NodeList::End (); ++i) {
@@ -168,6 +184,11 @@ MyGymEnv::GetObservation()
   return data;
 }
 
+/**
+ * La recompensa de cada nodo será la cantidad de paquetes recibidos totales tras la
+ * última acción
+ * 
+ */
 float
 MyGymEnv::GetReward()
 {
