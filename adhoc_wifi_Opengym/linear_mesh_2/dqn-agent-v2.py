@@ -122,3 +122,5 @@ for time in range(max_env_steps):
     rewardsum += reward
     if epsilon > epsilon_min: epsilon *= epsilon_decay
 
+print('Total Reward:', rewardsum)
+
