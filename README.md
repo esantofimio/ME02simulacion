@@ -397,12 +397,16 @@ Para el modelo de movilidad de los nodos se escogió la clase ns3::RandomWalk2dM
 La técnica de aprendizaje por refuerzo esta dado por, un agente que toma deciciones en un ambiente dado de forma discreta, de tal manera que induce a maximizar una nocíón de recompensa asociado a los estimulos y las decisiones tomandas, en el agente que se encuentra en la parte superior se implemento el algoritmo DQN el cual tiene las siguientes peculiaridades
 
 
-Se crea una red neuronal principal donde todos los nodos de la capa esten fuertemente conectados, para cada capa se utiliza una funcion de activacion diferente en la primera la función relu y en la segunda la funcion softmax, estas dos creadas con la ayuda del framework keras.
+Se crea una red neuronal principal donde todos los nodos de la capa estan fuertemente conectados, para cada capa se utiliza una funcion de activacion diferente en la primera la función relu y en la segunda la funcion softmax, estas dos creadas con la ayuda del framework keras.
 Para la función del gradiente descendiente se implementa el algorimo ADAM el cual usa a su vez la idea del algoritmo (MGD) para gestionar el aprendizaje cuando se hallan minimos locales y no los minimos globales 
 
-Se incluyen las funciones de fit, predict y get action que corresponden al entrenamiento de los datos de entrenamiento, a la asignacion de labels de acuerdo al estado recibido y las acciones que se deben realizar con lo que aprende el agente
+Se incluyen las funciones de fit, predict y get action que corresponden al entrenamiento de los datos del training set, a la asignacion de labels de acuerdo al estado recibido y las acciones que se deben realizar con lo que aprende el agente
 
-Se definen los hiperparametros como el epsilon, epsilon min y epsilon decay. El epsilon decay me dara los pasos que debe dar el gradiente para llegar a minimo global, el epsilon es un parametro de exploracion donde tendrá entre sus labores revisar el minimo error que puede cometer 
+Se definen los hiperparametros como el epsilon, epsilon min y epsilon decay. El epsilon decay me dará los pasos que debe dar el gradiente para llegar a minimo global, el epsilon es un parámetro de exploración donde tendrá entre sus labores revisar el minimo error que se puede cometer 
+
+El codigo tambien esta parametrizado de acuerdo a la cantidad de nodos que se requieran(dados en el ambiente), y así mismo se da la cantidad de agentes que participaran en la simulación, donde la cantidad de entidades de agente estan ligados a cada nodo creado en la simulación
+
+Como el algorimo DQN necesita dos redes neuronales (la principal y la objetivo o target), se trajo una instancia de la recompensa dada al target del agente, el cual se evaluar para reducir el error en la función de costo
 
 
 <h3>
