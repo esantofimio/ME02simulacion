@@ -389,7 +389,7 @@ Para el modelo de movilidad de los nodos se escogió la clase ns3::RandomWalk2dM
         rewardsum += reward
         if epsilon > epsilon_min: epsilon *= epsilon_decay
 
-
+    print('Total Reward:', rewardsum)
 
 <h3>
   Descripción del codigo:
@@ -437,9 +437,9 @@ Se definen los hiperparametros como el epsilon, epsilon min y epsilon decay. El 
     stepTime = 0.01  # seconds
     seed = 0
     simArgs = {"--simTime": simTime,
-               "--testArg": 123,
-               "--nodeNum": 5,
-               "--distance": 500}
+            "--testArg": 123,
+            "--nodeNum": 5,
+            "--distance": 500}
     debug = False
 
     env = ns3env.Ns3Env(port=port, stepTime=stepTime, startSim=startSim, simSeed=seed, simArgs=simArgs, debug=debug)
@@ -452,51 +452,34 @@ Se definen los hiperparametros como el epsilon, epsilon min y epsilon decay. El 
 
     stepIdx = 0
     currIt = 0
-    allRxPkts = 0
 
-    try:
-        while True:
-            print("Start iteration: ", currIt)
-            obs = env.reset()
-            reward = 0
-            print("Step: ", stepIdx)
-            print("---obs: ", obs)
+    rewardsum = 0
+    reward = 0
+    obs = env.reset()
 
-            while True:
-                stepIdx += 1
+    while True:
+        stepIdx += 1
 
-                allRxPkts += reward
-                action = env.action_space.sample()
-                action = action * 1 + 1
-                print("---action: ", action)
+        action = env.action_space.sample()
+        action = action * 1 + 1
+        print("---action: ", action)
 
-                obs, reward, done, info = env.step(action)
-                print("Step: ", stepIdx)
-                print("---obs, reward, done, info: ", obs, reward, done, info)
+        obs, reward, done, info = env.step(action)
+        print("Step: ", stepIdx)
+        print("---obs, reward, done, info: ", obs, reward, done, info)
+        rewardsum += reward
 
-                if done:
-                    stepIdx = 0
-                    print("All rx pkts num: ", allRxPkts)
-                    allRxPkts = 0
+        if done:
+            print('Done')
+            break
 
-                    if currIt + 1 < iterationNum:
-                        env.reset()
-                    break
-
-            currIt += 1
-            if currIt == iterationNum:
-                break
-
-    except KeyboardInterrupt:
-        print("Ctrl-C -> Exit")
-    finally:
-        env.close()
-        print("Done")
+    print('Total Reward:', rewardsum)
         
 <h3>
   Descripción del codigo:
 </h3>
 
+EL agente my_random2 selecciona aleatoriamente una posibilidad del espcio de acciones. Al final el agente termina su ejecución imprimiento el total de recompensa obtenida.
 
 <h3>
   Codigo fuente del ambiente
@@ -825,3 +808,11 @@ Se definen los hiperparametros como el epsilon, epsilon min y epsilon decay. El 
 
 
     #endif // MY_GYM_ENTITY_H
+<h3>
+  Descripción del codigo:
+</h3>
+
+Este archivo se encarga de establecer la comunicación con el agente. Define su espacio de acción y de observación, le brinda las obsrvaciones en cada tiempo, ejecuta las acciones que el agente envia y calcula la recompensa y el fin de la simulación. 
+
+El espacio de accion del agente se define sobre la Congestion Window (CW) de cada agente. El espacio de observación del agente se define por la tupla que contiene cantidad de paquetes que el agente desea enviar, y la cantidad de paquetes perdidos desde la últma acción. 
+
